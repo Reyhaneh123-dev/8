@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ساخت مجموعه A</title>
+  <style>
+    body {
+      font-family: "Vazir", sans-serif;
+      background: linear-gradient(120deg, #d7e3ff, #eef3ff);
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #2b4a9e; }
+    select, input, button {
+      margin: 8px;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #999;
+    }
+    canvas {
+      margin-top: 20px;
+      border: 1px solid #aaa;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>نمایش مجموعه A</h1>
+
+  <div>
+    <p>مجموعه A:</p>
+    <select id="knownSet">
+      <option value="">انتخاب مجموعه شناخته‌شده...</option>
+      <option value="N">N (اعداد طبیعی)</option>
+      <option value="W">W (اعداد حسابی)</option>
+      <option value="Z">Z (اعداد صحیح)</option>
+      <option value="Q">Q (اعداد گویا)</option>
+      <option value="R">R (اعداد حقیقی)</option>
+    </select>
+  </div>
+
+  <p id="symbolic"></p>
+
+  <input type="text" id="condition" placeholder="شرط (به زبان کلامی بنویس)">
+  <button onclick="convertCondition()">تبدیل شرط به زبان ریاضی</button>
+
+  <p id="mathCondition"></p>
+
+  <button onclick="showMembers()">نمایش اعضا</button>
+  <p id="members"></p>
+
+  <button onclick="drawVenn()">نمایش با نمودار ون</button><br>
+  <canvas id="vennCanvas" width="400" height="250"></canvas>
+
+  <br><button onclick="drawAxis()">نمایش مجموعه روی محور</button><br>
+  <canvas id="axisCanvas" width="500" height="150"></canvas>
+
+  <br><br>
+  <button style="padding:10px 25px; background-color:#2b4a9e; color:white; font-size:18px; border:none; border-radius:10px;"
+    onclick="goToNext()">انجام عملیات ریاضی ➜</button>
+
+  <script>
+    let selectedSet = "";
+    let members = [];
+
+    document.getElementById("knownSet").addEventListener("change", () => {
+      selectedSet = document.getElementById("knownSet").value;
+      document.getElementById("symbolic").innerText = `A = { x ∈ ${selectedSet} | ... }`;
+    });
+
+    function convertCondition() {
+      const text = document.getElementById("condition").value.trim();
+      if (text.includes("زوج")) document.getElementById("mathCondition").innerText = "x mod 2 = 0";
+      else if (text.includes("فرد")) document.getElementById("mathCondition").innerText = "x mod 2 ≠ 0";
+      else if (text.includes("بزرگتر از")) {
+        const num = text.match(/\d+/);
+        document.getElementById("mathCondition").innerText = num ? `x > ${num[0]}` : "";
+      } else if (text.includes("کوچکتر از")) {
+        const num = text.match(/\d+/);
+        document.getElementById("mathCondition").innerText = num ? `x < ${num[0]}` : "";
+      } else document.getElementById("mathCondition").innerText = "شرط ریاضی نامشخص است";
+    }
+
+    function showMembers() {
+      if (["R", "Q"].includes(selectedSet)) {
+        document.getElementById("members").innerText = `به دلیل اینکه عضو اعداد ${selectedSet==="R"?"حقیقی":"گویا"} است، نمایش اعضا ممکن نیست.`;
+        return;
+      }
+
+      if (selectedSet === "N") members = [1,2,3,4,5,6,7,8,9,10];
+      if (selectedSet === "W") members = [0,1,2,3,4,5];
+      if (selectedSet === "Z") members = [-3,-2,-1,0,1,2,3];
+
+      document.getElementById("members").innerText = `{ ${members.join(", ")} }`;
+    }
+
+    // نمودار ون انیمیشنی
+    function drawVenn() {
+      const canvas = document.getElementById("vennCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      let radius = 0;
+      const animate = setInterval(()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.beginPath();
+        ctx.arc(200,120,radius,0,2*Math.PI);
+        ctx.strokeStyle="#2b4a9e";
+        ctx.lineWidth=2;
+        ctx.stroke();
+        if (radius<100) radius+=5;
+        else {
+          clearInterval(animate);
+          ctx.font="14px Vazir";
+          ctx.fillStyle="#000";
+          ctx.fillText(members.join(", "), 200 - members.length*4, 125);
+        }
+      },40);
+    }
+
+    // محور
+    function drawAxis() {
+      const canvas = document.getElementById("axisCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      if (["Q","R"].includes(selectedSet)) {
+        ctx.fillText(`نمایش مجموعه روی محور برای اعداد ${selectedSet==="R"?"حقیقی":"گویا"} ممکن نیست.`, 50, 80);
+        return;
+      }
+
+      const nums = members.length?members:[-2,-1,0,1,2,3,4];
+      const min = Math.min(...nums)-1, max = Math.max(...nums)+1;
+      const step = (canvas.width-100)/(max-min);
+
+      // محور
+      ctx.beginPath();
+      ctx.moveTo(50,75);
+      ctx.lineTo(canvas.width-50,75);
+      ctx.stroke();
+
+      // فلش‌ها
+      ctx.beginPath();
+      ctx.moveTo(50,75);ctx.lineTo(60,70);ctx.moveTo(50,75);ctx.lineTo(60,80);
+      ctx.moveTo(canvas.width-50,75);ctx.lineTo(canvas.width-60,70);ctx.moveTo(canvas.width-50,75);ctx.lineTo(canvas.width-60,80);
+      ctx.stroke();
+
+      ctx.font="12px Vazir";
+      ctx.fillStyle="#000";
+
+      nums.forEach(num=>{
+        const x = 50+(num-min)*step;
+        ctx.beginPath();
+        ctx.arc(x,75,3,0,2*Math.PI);
+        ctx.fill();
+        ctx.fillText(num,x-4,95);
+      });
+    }
+
+    function goToNext() {
+      localStorage.setItem("setA", JSON.stringify(members));
+      window.location.href = "page3.html";
+    }
+  </script>
+</body>
+</html>

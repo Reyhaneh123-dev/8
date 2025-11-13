@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>انجام عملیات ریاضی روی مجموعه A</title>
+  <style>
+    body {
+      font-family: "Vazir", sans-serif;
+      background: linear-gradient(120deg, #e9f0ff, #f5f8ff);
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #2b4a9e; margin-bottom: 20px; }
+    .op-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .op-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50%;
+      background-color: #2b4a9e;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .op-btn:hover {
+      background-color: #4a66cc;
+      transform: scale(1.1);
+    }
+    #result {
+      margin-top: 40px;
+      font-size: 18px;
+      color: #333;
+    }
+    canvas {
+      margin-top: 30px;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>انجام عملیات ریاضی روی مجموعه A</h1>
+
+  <p>مجموعه A:</p>
+  <p id="setDisplay" style="font-weight:bold; color:#2b4a9e;"></p>
+
+  <p>یک عملیات انتخاب کنید:</p>
+  <div class="op-container">
+    <button class="op-btn" onclick="calculate('add')">+</button>
+    <button class="op-btn" onclick="calculate('subtract')">−</button>
+    <button class="op-btn" onclick="calculate('multiply')">×</button>
+    <button class="op-btn" onclick="calculate('divide')">÷</button>
+  </div>
+
+  <div id="result"></div>
+
+  <canvas id="chartCanvas" width="500" height="250"></canvas>
+
+  <br><br>
+  <button onclick="window.location.href='page2.html'" 
+    style="background:#2b4a9e; color:white; border:none; padding:10px 25px; border-radius:10px; font-size:16px;">
+    ⬅ بازگشت به صفحه قبل
+  </button>
+
+  <script>
+    const members = JSON.parse(localStorage.getItem("setA")) || [];
+    const display = document.getElementById("setDisplay");
+    const resultBox = document.getElementById("result");
+    const canvas = document.getElementById("chartCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // نمایش مجموعه
+    if (members.length) {
+      display.innerText = `{ ${members.join(", ")} }`;
+    } else {
+      display.innerText = "مجموعه تهی است یا از نوع نامتناهی (نمایش عددی ندارد)";
+    }
+
+    // تابع انجام عملیات
+    function calculate(type) {
+      if (!members.length) {
+        resultBox.innerText = "هیچ عضوی برای انجام عملیات وجود ندارد.";
+        return;
+      }
+
+      let res = [];
+      switch(type) {
+        case "add":
+          res = members.map(x => x + 1);
+          resultBox.innerText = "افزایش هر عضو به اندازه 1:";
+          break;
+        case "subtract":
+          res = members.map(x => x - 1);
+          resultBox.innerText = "کاهش هر عضو به اندازه 1:";
+          break;
+        case "multiply":
+          res = members.map(x => x * 2);
+          resultBox.innerText = "دو برابر کردن هر عضو:";
+          break;
+        case "divide":
+          res = members.map(x => (x / 2).toFixed(2));
+          resultBox.innerText = "نصف کردن هر عضو:";
+          break;
+      }
+
+      resultBox.innerText += `\n{ ${res.join(", ")} }`;
+      drawChart(res);
+    }
+
+    // رسم نمودار میله‌ای برای نمایش نتایج
+    function drawChart(values) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = 40, gap = 20;
+      const baseY = 200;
+      ctx.font = "12px Vazir";
+      ctx.strokeStyle = "#2b4a9e";
+      ctx.fillStyle = "#2b4a9e";
+
+      for (let i = 0; i < values.length; i++) {
+        const x = 50 + i * (w + gap);
+        const h = values[i] * 10;
+        ctx.beginPath();
+        ctx.rect(x, baseY - h, w, h);
+        ctx.fill();
+        ctx.fillText(values[i], x + 10, baseY - h - 10);
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(40, baseY);
+      ctx.lineTo(canvas.width - 30, baseY);
+      ctx.stroke();
+    }
+  </script>
+
+</body>
+</html>
